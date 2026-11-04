@@ -9,6 +9,7 @@ import { sfx, LINES } from '../../audio'
 import { Btn, CheckRow, Chip, Field, LockedCard, Screen, SystemWindow, fmtClock, useNow } from '../kit'
 import { startObjective } from '../actions'
 import { useUI } from '../store'
+import { ScreenTimeCard } from './Forge'
 
 // ============================================================ Re-entry
 export function Reentry({ driftId }: { driftId: number }) {
@@ -151,6 +152,8 @@ export function Shutdown() {
           </div>
         )}
       </SystemWindow>
+
+      <ScreenTimeCard />
 
       <SystemWindow title="3 · LIGHTS OUT">
         <p className="text-sm">

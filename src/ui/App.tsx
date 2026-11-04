@@ -9,9 +9,10 @@ import Quest from './screens/Quest'
 import Timer from './screens/Timer'
 import { CheckIn, Drift, Pulse } from './screens/Quick'
 import { Bosses, FearLog, Reentry, Shutdown } from './screens/Flow'
-import { Journal, Laws, Mirror, More, Settings, Skills } from './screens/Menus'
+import { Journal, Laws, Mirror, More, Settings } from './screens/Menus'
 import { GuildReport, QuestLog, ShadowArmy } from './screens/Systems'
 import { Assessments, Becoming, Decisions, FeedbackSheet, IpipTest, Manual, ThoughtAuditScreen, ValuesSort } from './screens/MirrorScreens'
+import { CourageScreen, FullAwakening, LibraryScreen, MainQuestScreen, RankExamScreen, ShopScreen, SkillsTab, TitlesScreen } from './screens/Forge'
 import { Btn } from './kit'
 
 const TABS: { id: Tab; label: string; glyph: string }[] = [
@@ -66,6 +67,20 @@ function renderSub(s: Sub) {
       return <Becoming />
     case 'decisions':
       return <Decisions />
+    case 'awakening':
+      return <FullAwakening />
+    case 'library':
+      return <LibraryScreen />
+    case 'courage':
+      return <CourageScreen />
+    case 'mainquest':
+      return <MainQuestScreen />
+    case 'rankexam':
+      return <RankExamScreen />
+    case 'titles':
+      return <TitlesScreen />
+    case 'shop':
+      return <ShopScreen />
   }
 }
 
@@ -142,7 +157,7 @@ export default function App() {
             {tab === 'status' && <Status />}
             {tab === 'quest' && <Quest />}
             {tab === 'mirror' && <Mirror />}
-            {tab === 'skills' && <Skills />}
+            {tab === 'skills' && <SkillsTab />}
             {tab === 'more' && <More />}
           </main>
           <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--acc)] bg-[rgba(6,11,26,0.96)] safe-bottom" aria-label="Main">

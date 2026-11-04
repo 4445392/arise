@@ -6,6 +6,7 @@ import { Btn, CheckRow, Counter, LockedCard, SystemWindow, fmtHMS, useNow } from
 import { startObjective } from '../actions'
 import { useUI } from '../store'
 import { HiddenQuests } from './Systems'
+import { EmergencyAndGate, PainFlag, PuzzleRating, Recorder } from './Forge'
 
 const AUTO_ITEMS = new Set(['pulses', 'journal', 'next'])
 
@@ -32,6 +33,7 @@ function ObjectiveCard({ o, penalty }: { o: ObjectiveSpec; penalty?: boolean }) 
 
         {o.kind === 'checklist' && (
           <div className="mt-3 space-y-2">
+            {o.id === 'TEACH_BACK' && <Recorder />}
             {o.items!.map((i) => (
               <CheckRow
                 key={i.id}
@@ -44,6 +46,7 @@ function ObjectiveCard({ o, penalty }: { o: ObjectiveSpec; penalty?: boolean }) 
                 }}
               />
             ))}
+            {o.id === 'BODY' && <PainFlag />}
             {o.id === 'SHUTDOWN' && (
               <Btn variant="primary" className="w-full" onClick={() => startObjective(o)}>
                 Open Shutdown
@@ -123,9 +126,13 @@ export default function Quest() {
 
       {q.penalty && <ObjectiveCard o={q.penalty} penalty />}
       {q.objectives.map((o) => (
-        <ObjectiveCard key={o.key} o={o} />
+        <div key={o.key}>
+          <ObjectiveCard o={o} />
+          {o.id === 'STRATEGY' && <div className="mt-4"><PuzzleRating /></div>}
+        </div>
       ))}
       <HiddenQuests />
+      <EmergencyAndGate />
       {q.locked.map((l) => (
         <LockedCard key={l.id} title={l.title} label={l.reason} />
       ))}

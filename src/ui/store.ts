@@ -30,6 +30,13 @@ export type Sub =
   | { name: 'values' }
   | { name: 'becoming' }
   | { name: 'decisions' }
+  | { name: 'awakening' }
+  | { name: 'library' }
+  | { name: 'courage' }
+  | { name: 'mainquest' }
+  | { name: 'rankexam' }
+  | { name: 'titles' }
+  | { name: 'shop' }
 
 export type NoticeKind = 'system' | 'penalty' | 'recovery' | 'levelup' | 'support'
 

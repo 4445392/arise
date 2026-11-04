@@ -56,3 +56,14 @@ One line each: decision — reason.
 - Values card sort is two-stage (keep what matters, then pick exactly 5). 'Who I'm becoming' is three prompted sentences.
 - Schema v2 adds a time index to assessments (Dexie migration, no data change).
 - Insights now read real feedback, motive tags, thought audits and assessments; DECODED % = unlocked chapters / 13.
+
+## Phase 7 (the Forge)
+- Skill resources: only links confirmed to exist (official pages, or surfaced by web search / given in the spec) are clickable; everything else shows a search phrase instead of a guessed URL. Professor Leonard's channel and the Coursera / Voss / Hormozi links could not be confirmed to an exact URL, so they are search hints, not links.
+- Trio starts at 50 % of the tested max (min 5) and steps +10 % (min +2, cap 100) each week under the TRUST rule, together with steps (+500, cap 10,000) and the screen-time target (-10 % a week, floor 120 min). A pain flag swaps Body for mobility for 3 days and pauses Trio progression.
+- 'Cheat meal' in the Shop is named 'Treat meal' (safety rail 4: no food-restriction framing). Rewards above D-rank were added by me (day out R3000, bigger treat 6000).
+- Rank Exams: D and C exactly as in the spec; B, A, S are drafts (skill gates, shadows, TRUST, DECODED, courage level, monthly GOLD) to be refined at System Updates. The exam opens only once XP passes the gate; passing releases the banked level.
+- Emergency Quests: ~one per fortnight on a deterministic day, daytime only (08:00-22:00 shown), Lv8+, never in EXAM mode. Gates: Saturdays after D-rank, 250 XP.
+- Titles: bonuses applied as an all-XP multiplier (Keeper of Promises) or a stat-XP multiplier; Merchant's Main Quest XP bonus and Job passives are displayed but not yet applied to XP (Phase 8 / System Update).
+- Signature Skills use cleared gates: hours per active day x average enjoyment (feedback on the Skill Gate objective).
+- Teach-back recording uses MediaRecorder, stored in IndexedDB on the device, purged after 30 days, excluded from JSON backups.
+- B-rank+ Gate content, Main Quest II and SEMESTER finalisation happen at the February System Update.

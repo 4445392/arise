@@ -8,6 +8,7 @@ import {
   isRecoveryDay,
 } from '../engine/penalties'
 import { addStats, dayStatXp, emptyStats, statLevel } from '../engine/stats'
+import { nextScreenTarget, nextSteps, nextTrio, overScreenTarget, titleXpMult } from '../engine/forge'
 import { computeInsights, decodedPct, type InsightInput } from '../engine/insights'
 import { nextRampWeek, rampDecision, trustPct, type PromiseDay } from '../engine/trust'
 import {
@@ -210,7 +211,9 @@ export class Repo {
 
   private async modeFor(day: string, s?: Settings): Promise<Mode> {
     const settings = s ?? (await this.getSettings())
-    return modeForDay(day, { lastExamDay: settings.lastExamDay, restartDay: settings.restartDay })
+    const ex = [...(settings.semesterExams ?? [])].sort()
+    const examWindows = ex.length ? [{ from: addDays(ex[0], -14), to: ex[ex.length - 1] }] : undefined
+    return modeForDay(day, { lastExamDay: settings.lastExamDay, restartDay: settings.restartDay, examWindows })
   }
 
   private async recentMoods() {
@@ -236,10 +239,12 @@ export class Repo {
       deload: flags.deload,
       lowMood: flags.lowMood,
       hpRecovery: flags.hpRecovery,
+      painSwap: !!player.painSwap?.until && player.painSwap.until >= day,
       penalty: penaltyIssued ? { hpLow: flags.hpRecovery || (keep?.checkIn ? needsRecovery(keep.checkIn.hp) : false) } : null,
       exams: exams.map((e) => ({ id: String(e.id), subject: e.subject, dateKey: e.dateKey })),
       studyTargetMin: settings.studyTargetMin,
       mainQuestWindow: settings.mainQuestWindow,
+      trio: player.trio,
     })
     const base: DayLog = {
       dayKey: day,
@@ -269,7 +274,8 @@ export class Repo {
     const onTime = log.lateKeys.length === 0
     // the +25 % completion bonus needs an on-time finish; late logging still counts as kept
     const bonusOutcome = score.outcome === 'COMPLETE' && !onTime ? 'PARTIAL' : score.outcome
-    const ctx = { mode: log.mode, weeklyFocusStat: player.weeklyFocusStat }
+    const ctx = { mode: log.mode, weeklyFocusStat: player.weeklyFocusStat, titleMult: titleXpMult(player.equippedTitle) }
+    const scrollDebuff = player.screenTargetMin != null && log.screenMin != null && overScreenTarget(log.screenMin, player.screenTargetMin)
     const xp = dayXp(log.quest.objectives, log.progress, bonusOutcome, ctx)
     return {
       ...log,
@@ -278,7 +284,7 @@ export class Repo {
       pct: Math.round(score.pct),
       outcome: log.closed ? score.outcome : allDone ? 'COMPLETE' : null,
       xp: xp.total,
-      statXp: dayStatXp(log.quest.objectives, log.progress, ctx),
+      statXp: dayStatXp(log.quest.objectives, log.progress, { ...ctx, scrollDebuff }),
     }
   }
 
@@ -324,14 +330,24 @@ export class Repo {
     let fatigue = log.flags.deload ? 0 : fatigueStep(p.fatigue, hp, fullLoad)
     if (fatigue < 0) fatigue = 0
     let { rampWeek, rampAnchor } = p
+    let weekly: 'advance' | 'hold' | 'step_back' | null = null
     if (log.mode === 'BREAK') {
       if (!rampAnchor) rampAnchor = day
       if (diffDays(rampAnchor, day) % 7 === 6) {
         const logs = await this.db.dayLogs.toArray()
-        rampWeek = nextRampWeek(rampWeek, rampDecision(trustPct(toPromises(logs), day, 7)))
+        const decision = rampDecision(trustPct(toPromises(logs), day, 7))
+        rampWeek = nextRampWeek(rampWeek, decision)
+        weekly = decision
       }
     }
-    await this.savePlayer({ penalty, fatigue, rampWeek, rampAnchor, lastClosedDay: day })
+    const patch: Partial<Player> = { penalty, fatigue, rampWeek, rampAnchor, lastClosedDay: day }
+    if (weekly && p.trio && !(p.painSwap?.until && p.painSwap.until >= day)) {
+      patch.trio = { push: nextTrio(p.trio.push, weekly), squat: nextTrio(p.trio.squat, weekly), sit: nextTrio(p.trio.sit, weekly), steps: nextSteps(p.trio.steps, weekly) }
+    } else if (weekly && p.trio) {
+      patch.trio = { ...p.trio, steps: nextSteps(p.trio.steps, weekly) }
+    }
+    if (weekly && p.screenTargetMin != null && p.screenBaselineMin != null) patch.screenTargetMin = nextScreenTarget(p.screenTargetMin, p.screenBaselineMin, weekly)
+    await this.savePlayer(patch)
     return log
   }
 
@@ -369,7 +385,8 @@ export class Repo {
     }))
   }
 
-  addValue(day: string, key: string, delta: number, awayDelta = 0): Promise<DayLog> {
+  async addValue(day: string, key: string, delta: number, awayDelta = 0): Promise<DayLog> {
+    if (key === 'SKILL_GATE' && delta !== 0) await this.addSkillMinutes(delta)
     return this.updateProgress(day, key, (p) => ({
       ...p,
       value: Math.max(0, p.value + delta),
@@ -424,6 +441,16 @@ export class Repo {
     const day = this.today()
     await this.db.sessions.add({ ...s, ts: this.now(), dayKey: day })
     return this.addValue(day, s.objectiveKey, s.minutes, s.phoneAway ? s.minutes : 0)
+  }
+
+  /** Minutes practised on the current Skill Gate (cumulative per skill). */
+  async addSkillMinutes(minutes: number): Promise<void> {
+    const gates = await this.db.skillGates.toArray()
+    const cur = gates.filter((g) => !g.clearedDay).at(-1)
+    if (!cur) return
+    const row = await this.db.skillLevels.where('skillId').equals(cur.skillId).first()
+    if (row?.id) await this.db.skillLevels.update(row.id, { minutes: Math.max(0, row.minutes + minutes) })
+    else await this.db.skillLevels.add({ skillId: cur.skillId, minutes })
   }
 
   // ------------------------------------------------------------ drift
@@ -540,9 +567,16 @@ export class Repo {
       audits: audits.map((a) => ({ traps: a.traps })),
       ipip: (assess.filter((a) => a.kind === 'ipip').at(-1)?.result as InsightInput['ipip']) ?? null,
       values: (assess.filter((a) => a.kind === 'values').at(-1)?.result as string[] | undefined) ?? null,
-      skills: [],
+      skills: await this.skillRecs(feedback),
       level,
     }
+  }
+
+  private async skillRecs(feedback: { objectiveKey: string; enjoyment: number }[]): Promise<InsightInput['skills']> {
+    const [gates, levels] = await Promise.all([this.db.skillGates.toArray(), this.db.skillLevels.toArray()])
+    const enj = feedback.filter((f) => f.objectiveKey === 'SKILL_GATE').map((f) => f.enjoyment)
+    const avg = enj.length ? enj.reduce((a, b) => a + b, 0) / enj.length : 3
+    return gates.filter((g) => g.clearedDay).map((g) => ({ name: g.skillId, hours: (levels.find((l) => l.skillId === g.skillId)?.minutes ?? 0) / 60, daysActive: diffDays(g.startDay, g.clearedDay!) + 1, avgEnjoyment: avg }))
   }
 
   async decoded(): Promise<number> {
@@ -552,6 +586,8 @@ export class Repo {
   async snapshot(): Promise<Snapshot> {
     await this.init()
     await this.rollover()
+    const cutoff = this.now() - 30 * 86_400_000
+    await this.db.recordings.where('ts').below(cutoff).delete() // teach-back audio is auto-deleted after 30 days
     const today = this.today()
     const log = await this.ensureDay(today)
     const [settings, player, totals, exams, fears, decoded] = await Promise.all([

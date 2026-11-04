@@ -230,6 +230,9 @@ export function Settings() {
           <Field label="University restart (Semester begins)">
             <input type="date" value={s.restartDay} onChange={(e) => e.target.value && void save({ restartDay: e.target.value })} />
           </Field>
+          <Field label="Semester exam dates (EXAM mode returns 14 days before the first), comma-separated YYYY-MM-DD">
+            <input type="text" defaultValue={(s.semesterExams ?? []).join(', ')} onBlur={(e) => void save({ semesterExams: e.target.value.split(',').map((x) => x.trim()).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x)) })} />
+          </Field>
         </div>
       </SystemWindow>
 

@@ -49,6 +49,8 @@ export interface QuestInput {
   deload?: boolean
   lowMood?: boolean
   hpRecovery?: boolean // HP < 40 % this morning
+  /** Pain flag: Body becomes a mobility swap for 3 days (spec 4.5). */
+  painSwap?: boolean
   penalty?: PenaltyInput | null // a Penalty Quest is issued today
   exams?: readonly ExamInfo[]
   /** EXAM mode: planned study minutes for the day (Dungeons). */
@@ -109,11 +111,11 @@ function shutdown(minutes: number, full: boolean): ObjectiveSpec {
   })
 }
 
-function bodyMobility(): ObjectiveSpec {
+function bodyMobility(pain = false): ObjectiveSpec {
   return obj({
     id: 'BODY',
-    title: 'BODY: Recovery Protocol',
-    desc: 'HP is low. Mobility and a walk today — this still counts as kept.',
+    title: pain ? 'BODY: Mobility swap' : 'BODY: Recovery Protocol',
+    desc: pain ? 'Pain flagged. Mobility and a walk for a few days — progress resumes when it settles.' : 'HP is low. Mobility and a walk today — this still counts as kept.',
     minutes: 25,
     stats: [...BODY_STATS],
     window: 'Morning',
@@ -221,7 +223,7 @@ function trioBody(t: TrioTargets, minutes: number): ObjectiveSpec {
       { id: 'push', label: `${t.push} push-ups` },
       { id: 'squat', label: `${t.squat} squats` },
       { id: 'sit', label: `${t.sit} sit-ups` },
-      { id: 'walk', label: `Walk to ${t.steps.toLocaleString('en-ZA')} steps` },
+      { id: 'walk', label: `Walk to ${String(t.steps).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} steps` },
     ],
   })
 }
@@ -246,7 +248,7 @@ function examQuest(i: QuestInput, gym: boolean, sunday: boolean, factor: number)
   const notices: string[] = []
   const study = Math.max(15, Math.round((i.studyTargetMin ?? 120) * factor))
   const list: ObjectiveSpec[] = [awaken()]
-  const body = i.hpRecovery || i.deload ? bodyMobility() : sunday ? activeRecovery() : examBody(gym)
+  const body = i.hpRecovery || i.deload || i.painSwap ? bodyMobility(!!i.painSwap) : sunday ? activeRecovery() : examBody(gym)
   list.push(scale(body, factor))
   list.push(
     obj({
@@ -337,7 +339,7 @@ function fullQuest(i: QuestInput, mode: Mode, gym: boolean, sunday: boolean, fac
     return { objectives: list.map((s) => scale(s, factor)), notices: ['SUNDAY — REST & REVIEW. Light day by design.'] }
   }
 
-  const body = i.hpRecovery || i.deload ? bodyMobility() : gym ? gymBody(m('BODY')) : trioBody(i.trio ?? { push: 10, squat: 10, sit: 10, steps: 5000 }, m('BODY'))
+  const body = i.hpRecovery || i.deload || i.painSwap ? bodyMobility(!!i.painSwap) : gym ? gymBody(m('BODY')) : trioBody(i.trio ?? { push: 10, squat: 10, sit: 10, steps: 5000 }, m('BODY'))
   list.push(body)
   list.push(
     timer('STILLNESS', 'STILLNESS', 'Breath-counting meditation. Count 1 to 10, start again.', m('STILLNESS'), ['FOC', 'WIS'], 'Morning'),

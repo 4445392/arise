@@ -23,6 +23,8 @@ export interface Settings {
   onboarded: boolean
   /** Last day a JSON backup was exported (drives the Sunday reminder). */
   lastBackupDay?: string
+  /** Semester exam dates; EXAM mode returns 14 days before the first. */
+  semesterExams?: string[]
 }
 
 export interface Player {
@@ -39,6 +41,20 @@ export interface Player {
   /** Last game day that has been closed (scored, penalties/fatigue applied). */
   lastClosedDay: string | null
   becoming?: string[]
+  /** Full Awakening results */
+  trio?: { push: number; squat: number; sit: number; steps: number }
+  trioMax?: { push: number; squat: number; sit: number; plankSec: number }
+  screenBaselineMin?: number
+  screenTargetMin?: number
+  lichessStart?: number
+  lichessNow?: number
+  courageRungs?: string[]
+  equippedTitle?: string | null
+  /** Main Quest I chapter ids cleared + outreach count */
+  mqDone?: string[]
+  mqOutreach?: number
+  awakened?: boolean
+  painSwap?: { until: string; where?: string }
 }
 
 export interface CheckInRec {

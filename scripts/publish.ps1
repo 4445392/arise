@@ -1,6 +1,6 @@
 # One-time publish: creates the GitHub repo `arise` under 4445392, pushes, and turns on GitHub Pages (Actions source).
 # Prereqs: GitHub CLI installed (winget install GitHub.cli) and logged in (gh auth login).
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 $user = '4445392'
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {

@@ -6,6 +6,9 @@ import { TRUST_COPY } from '../../engine/trust'
 import { Bar, Btn, SystemWindow } from '../kit'
 import { startObjective, daysUntil, STAT_FULL } from '../actions'
 import { useUI } from '../store'
+import { repo } from '../../data'
+import { goldState, shopState, titleName } from '../../data/forge'
+import { assignJob } from '../../engine/forge'
 import { BackupBanner } from './Systems'
 
 const MODE_LABEL = { EXAM: 'EXAM MODE', BREAK: 'TRAINING ARC', SEMESTER: 'SEMESTER' } as const
@@ -25,7 +28,16 @@ export default function Status() {
 
   const trust30 = totals.trust30
   const trust7 = totals.trust7
-  const essence = Math.floor(totals.xp / 10)
+  const [extra, setExtra] = useState({ essence: Math.floor(totals.xp / 10), gold: 0, title: '—', job: '—' })
+  useEffect(() => {
+    void (async () => {
+      const [shop, gold] = await Promise.all([shopState(repo), goldState(repo)])
+      const t = snap.player.equippedTitle ? titleName(snap.player.equippedTitle) : '—'
+      const j = totals.level.level >= 25 ? assignJob(totals.stats).id : '—'
+      setExtra({ essence: shop.essence, gold: gold.total, title: t, job: j })
+    })()
+  }, [snap.today, totals.xp, snap.player.equippedTitle])
+  const essence = extra.essence
 
   return (
     <div className="flex flex-col gap-4">
@@ -38,7 +50,7 @@ export default function Status() {
             <div className="flex items-end justify-between gap-3">
               <div>
                 <div className="font-display text-2xl font-bold">{settings.name}</div>
-                <div className="sys-dim text-xs tracking-widest">TITLE —  ·  JOB —</div>
+                <div className="sys-dim text-xs tracking-widest">TITLE {extra.title}  ·  JOB {extra.job}</div>
               </div>
               <div className="text-right">
                 <div className="num text-5xl leading-none text-cyan">
@@ -75,6 +87,13 @@ export default function Status() {
           {flipped ? 'FRONT' : 'FLIP WINDOW'}
         </button>
       </SystemWindow>
+
+      {snap.mode !== 'EXAM' && !snap.player.awakened && (
+        <SystemWindow title="FULL AWAKENING" glow>
+          <p className="text-sm">Day 0 of the Training Arc. Baselines set your Daily Trio, steps and screen-time targets.</p>
+          <Btn variant="primary" big className="mt-3" onClick={() => open({ name: 'awakening' })}>Begin</Btn>
+        </SystemWindow>
+      )}
 
       {hp !== undefined && mp !== undefined ? (
         <SystemWindow title="VITALS">
@@ -175,7 +194,7 @@ export default function Status() {
       <div className="grid grid-cols-2 gap-3">
         <div className="sys !p-3">
           <div className="sys-dim text-[11px] tracking-[0.2em]">GOLD</div>
-          <div className="num text-2xl text-gold">R0</div>
+          <div className="num text-2xl text-gold">R{extra.gold.toLocaleString()}</div>
         </div>
         <div className="sys !p-3">
           <div className="sys-dim text-[11px] tracking-[0.2em]">ESSENCE</div>
