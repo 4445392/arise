@@ -48,3 +48,13 @@ After the first load it works offline. Your data lives in the browser's storage 
 ## Calendar reminders (Phase 5)
 
 Settings -> "Add schedule to my calendar" downloads `arise-schedule.ics`. If your calendar app drops the imported alarms, turn on default reminders for that calendar in its settings.
+
+## Quality checks
+
+`ash
+npm test       # 200+ Vitest tests (engine, data, 4-year simulation)
+npm run e2e    # Playwright smoke tests (builds, serves, drives the app at 375 px, offline)
+``n
+## Monthly System Update
+
+Put your latest backup JSON in `exports/` and type `/system-update` in Claude Code. It reads trends, updates content within the safety rails, runs tests, commits, deploys and writes the update notes shown on the next app open.

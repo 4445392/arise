@@ -243,7 +243,7 @@ input[type='range'] {
   accent-color: var(--acc);
   height: 36px;
 }
-label.field {
+.field {
   display: block;
   font-size: 0.78rem;
   letter-spacing: 0.12em;
@@ -299,3 +299,5 @@ label.field {
 @keyframes rise { from { transform: translateY(40px) scale(1); opacity: 1; } to { transform: translateY(-160px) scale(0.2); opacity: 0; } }
 .particle { position: absolute; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--color-cyan); box-shadow: 0 0 10px var(--acc-glow); animation: rise 1.4s ease-out forwards; }
 @media (prefers-reduced-motion: reduce) { .particle { animation: none; opacity: 0; } }
+
+:focus-visible { outline: 2px solid var(--color-cyan); outline-offset: 2px; }

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Suspense, lazy } from 'react'
+
+const TrendChart = lazy(() => import('../charts').then((m) => ({ default: m.TrendChart })))
 import { FACTOR_NAMES, IPIP_ITEMS, SCALE_LABELS, type Factor } from '../../content/ipip50'
 import { THINKING_TRAPS, VALUES } from '../../content/values'
 import { plainMeaning, scoreIpip } from '../../engine/ipip'
@@ -196,14 +198,9 @@ export function ThoughtAuditScreen() {
       {trend.length > 1 && (
         <SystemWindow title="TREND">
           <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trend}>
-                <XAxis dataKey="week" stroke="#8fa6cf" fontSize={11} />
-                <YAxis stroke="#8fa6cf" fontSize={11} width={24} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: '#0a1330', border: '1px solid #2f7bff' }} />
-                <Line dataKey="total" stroke="#5ee7ff" dot />
-              </LineChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<p className="sys-dim text-xs">Loading chart…</p>}>
+              <TrendChart data={trend} />
+            </Suspense>
           </div>
         </SystemWindow>
       )}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { repo } from '../data'
 import { isObjectiveDone } from '../engine/xp'
 import Notice from './Notice'
@@ -13,6 +13,7 @@ import { Journal, Laws, Mirror, More, Settings } from './screens/Menus'
 import { GuildReport, QuestLog, ShadowArmy } from './screens/Systems'
 import { Assessments, Becoming, Decisions, FeedbackSheet, IpipTest, Manual, ThoughtAuditScreen, ValuesSort } from './screens/MirrorScreens'
 import { CourageScreen, FullAwakening, LibraryScreen, MainQuestScreen, RankExamScreen, ShopScreen, SkillsTab, TitlesScreen } from './screens/Forge'
+const History = lazy(() => import('./screens/History').then((m) => ({ default: m.History })))
 import { Btn } from './kit'
 
 const TABS: { id: Tab; label: string; glyph: string }[] = [
@@ -81,6 +82,12 @@ function renderSub(s: Sub) {
       return <TitlesScreen />
     case 'shop':
       return <ShopScreen />
+    case 'history':
+      return (
+        <Suspense fallback={<p className="p-6 text-center sys-dim">Loading…</p>}>
+          <History />
+        </Suspense>
+      )
   }
 }
 

@@ -212,6 +212,12 @@ describe('fear log, boss raids, drift', () => {
     expect((await repo.snapshot()).checkBacksDue).toHaveLength(0)
     expect((await repo.db.fears.get(id))!.outcome).toBe('no')
   })
+  it('lists fears newest first (regression: needs a ts index)', async () => {
+    const a = await repo.addFear({ situation: 'a', afraid: 'first', predicted: 10, severity: 1, ifThen: 'x', checkBack: '2026-11-06' })
+    clock += 1000
+    const b = await repo.addFear({ situation: 'b', afraid: 'second', predicted: 10, severity: 1, ifThen: 'x', checkBack: '2026-11-06' })
+    expect((await repo.listFears()).map((f) => f.id)).toEqual([b, a])
+  })
   it('boss raid XP is awarded once', async () => {
     const id = await repo.addExam('Maths', '2026-11-04')
     expect(await repo.confirmBossShowUp(id)).toBe(150)

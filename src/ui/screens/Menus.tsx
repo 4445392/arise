@@ -94,9 +94,9 @@ export function More() {
       <Row title="Night Journal" onClick={() => open({ name: 'journal' })} />
       <Row title="Laws of the System" onClick={() => open({ name: 'laws' })} />
       <Row title="Settings & backup" hint="Times · export / import · reset" onClick={() => open({ name: 'settings' })} />
-      <LockedCard title="SHOP" label={shop.locked ? shop.label : 'COMING'} />
-      <LockedCard title="TITLES" label={titles.locked ? titles.label : 'COMING'} />
-      <LockedCard title="HISTORY" label="COMING" hint="XP over time, stats radar, TRUST line." />
+      {shop.locked ? <LockedCard title="SHOP" label={shop.label} hint="Spend Essence on guilt-free rewards." /> : <Row title="Shop" hint="Spend Essence" onClick={() => open({ name: 'shop' })} />}
+      {titles.locked ? <LockedCard title="TITLES & JOB" label={titles.label} hint="Earned from evidence, never chosen." /> : <Row title="Titles & Job" onClick={() => open({ name: 'titles' })} />}
+      <Row title="History" hint="XP · stats radar · TRUST · deep work · screen time" onClick={() => open({ name: 'history' })} />
     </div>
   )
 }

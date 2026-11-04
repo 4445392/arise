@@ -67,3 +67,11 @@ One line each: decision — reason.
 - Signature Skills use cleared gates: hours per active day x average enjoyment (feedback on the Skill Gate objective).
 - Teach-back recording uses MediaRecorder, stored in IndexedDB on the device, purged after 30 days, excluded from JSON backups.
 - B-rank+ Gate content, Main Quest II and SEMESTER finalisation happen at the February System Update.
+
+## Phase 8 (polish and QA)
+- Lighthouse (v12, production build, mobile emulation): performance 96-97, accessibility 100, best practices 100, SEO 100. Lighthouse 12 no longer has a PWA category, so PWA installability was verified directly: valid manifest (standalone, scope /arise/, 192/512 + maskable icons), active service worker, and a Playwright test that reloads the app OFFLINE.
+- Playwright installed cleanly: 2 smoke tests (onboarding, Quest ticking, reload persistence, every tab with no horizontal scroll at 375 px, offline reload, Fear Log). Run with npm run e2e.
+- The e2e run caught a real bug (Fear Log list needed a ts index): fixed with Dexie schema v3 and a regression test.
+- Recharts is lazy-loaded (History, Fear Log chart, Thought Audit trend) to keep first paint fast. Form labels now wrap their inputs.
+- /system-update lives in .claude/commands/system-update.md; update notes live in src/content/updates.ts and show once on the next app open.
+- Not done: Job passives and the Merchant title's Main Quest XP bonus are displayed but not applied to XP; B-rank+ exam criteria and Gate content are drafts for the monthly updates; sound/voice and the install flow are untested on a real phone.

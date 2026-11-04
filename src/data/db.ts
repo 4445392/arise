@@ -65,6 +65,10 @@ export class AriseDB extends Dexie {
     this.version(2).stores({
       assessments: '++id, kind, ts',
     })
+    // v3: the Fear Log lists by time (orderBy needs an index)
+    this.version(3).stores({
+      fears: '++id, dayKey, checkBack, examId, ts',
+    })
   }
 }
 

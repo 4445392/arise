@@ -103,10 +103,10 @@ export function Rating({ value, onChange, labels, label }: { value: number | nul
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div>
-      <label className="field">{label}</label>
+    <label className="block">
+      <span className="field">{label}</span>
       {children}
-    </div>
+    </label>
   )
 }
 

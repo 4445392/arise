@@ -4,3 +4,7 @@ dev-dist
 *.local
 exports/
 .DS_Store
+test-results
+playwright-report
+lh.json
+*.tmp.mjs

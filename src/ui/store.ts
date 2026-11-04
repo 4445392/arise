@@ -4,6 +4,7 @@ import { STAT_KEYS, type StatKey } from '../engine/types'
 import { MODE_NOTICES } from '../engine/mode'
 import { repo, requestPersist, type Snapshot } from '../data'
 import { isObjectiveDone } from '../engine/xp'
+import { UPDATES } from '../content/updates'
 import { shouldAskMotive } from '../engine/manual'
 
 export type Tab = 'status' | 'quest' | 'mirror' | 'skills' | 'more'
@@ -37,6 +38,7 @@ export type Sub =
   | { name: 'rankexam' }
   | { name: 'titles' }
   | { name: 'shop' }
+  | { name: 'history' }
 
 export type NoticeKind = 'system' | 'penalty' | 'recovery' | 'levelup' | 'support'
 
@@ -79,6 +81,7 @@ interface UI {
 }
 
 const ARRIVAL_KEY = 'arise.arrival'
+const UPDATE_KEY = 'arise.update'
 let popBound = false
 
 function lsGet(k: string): string | null {
@@ -226,6 +229,11 @@ async function announce(snap: Snapshot) {
     const m = MODE_NOTICES[snap.mode]
     notify({ kind: 'system', title: `[NOTICE] ${m.title}`, body: m.body, cta: 'Understood' })
     await repo.savePlayer({ lastModeSeen: snap.mode })
+  }
+  const latest = UPDATES.at(-1)
+  if (latest && lsGet(UPDATE_KEY) !== latest.id) {
+    lsSet(UPDATE_KEY, latest.id)
+    notify({ kind: 'system', title: '[SYSTEM UPDATE]', body: latest.lines.join(' '), cta: 'Understood' })
   }
   if (lsGet(ARRIVAL_KEY) !== snap.today) {
     lsSet(ARRIVAL_KEY, snap.today)

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bar as RBar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Suspense, lazy } from 'react'
+
+const FearChart = lazy(() => import('../charts'))
 import { calibration, disasterLine, type FearOutcome } from '../../engine/fear'
 import { addDays } from '../../engine/day'
 import { checkUnlock } from '../../engine/unlocks'
@@ -224,16 +226,9 @@ export function FearLog({ examId, compose }: { examId?: number; compose?: boolea
         </div>
         {cal.buckets.length > 0 && (
           <div className="mt-4 h-44" aria-label="Predicted versus actual">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cal.buckets.map((b) => ({ name: b.label, predicted: Math.round(b.avgPredicted), actual: Math.round(b.actual) }))}>
-                <CartesianGrid stroke="#1b2a55" strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="#8fa6cf" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="#8fa6cf" fontSize={11} width={28} />
-                <Tooltip contentStyle={{ background: '#0a1330', border: '1px solid #2f7bff' }} />
-                <RBar dataKey="predicted" fill="#4da3ff" name="predicted %" />
-                <RBar dataKey="actual" fill="#5ee7ff" name="actual %" />
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<p className="sys-dim text-xs">Loading chart…</p>}>
+              <FearChart data={cal.buckets.map((b) => ({ name: b.label, predicted: Math.round(b.avgPredicted), actual: Math.round(b.actual) }))} />
+            </Suspense>
           </div>
         )}
         {cal.buckets.length === 0 && <p className="sys-dim mt-3 text-xs">Resolve a few fears and the calibration chart appears here: what you predicted vs what happened.</p>}
