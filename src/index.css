@@ -1,0 +1,34 @@
+@import '@fontsource/rajdhani/latin-500.css';
+@import '@fontsource/rajdhani/latin-600.css';
+@import '@fontsource/rajdhani/latin-700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --color-void: #060b1a;
+  --color-panel: #0a1330;
+  --color-sys: #2f7bff;
+  --color-sys-glow: #4da3ff;
+  --color-cyan: #5ee7ff;
+  --color-danger: #ff3b4e;
+  --color-calm: #2dd4bf;
+  --color-gold: #ffc857;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: #eaf2ff;
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
