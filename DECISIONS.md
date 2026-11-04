@@ -48,3 +48,11 @@ One line each: decision — reason.
 - Guild Report: week = Monday-Sunday; Weekly Focus Stat (weakest stat, ties by stat order) is applied when the report is opened on Sunday.
 - Backup reminder shows on Sundays or 7+ days since the last export. .ics has wake (weekday/weekend), focus window, Shutdown (30 min before lights-out), Sunday report, all with alarms.
 
+
+## Phase 6 (the Mirror)
+- IPIP-50 items and scoring keys were transcribed from memory of Goldberg's public-domain marker set (no web access in this build) and credited to ipip.ori.org; they have NOT been re-verified against the site. Verify once online and correct src/content/ipip50.ts if anything differs.
+- Bands: mean < 2.67 low, 2.67-3.67 average, > 3.67 high (thirds of the 1-5 scale). Neuroticism is shown as 'Emotional stability' inverted in the personality chapter.
+- Feedback sheet (difficulty + enjoyment) appears after every objective completes; the motive question appears on ~1 in 3 (deterministic hash of objective+day). Start delay = first interaction minus wake time.
+- Values card sort is two-stage (keep what matters, then pick exactly 5). 'Who I'm becoming' is three prompted sentences.
+- Schema v2 adds a time index to assessments (Dexie migration, no data change).
+- Insights now read real feedback, motive tags, thought audits and assessments; DECODED % = unlocked chapters / 13.

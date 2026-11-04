@@ -62,6 +62,9 @@ export class AriseDB extends Dexie {
       weeklyReports: '++id, weekKey',
       recordings: '++id, dayKey, ts',
     })
+    this.version(2).stores({
+      assessments: '++id, kind, ts',
+    })
   }
 }
 

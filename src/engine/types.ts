@@ -61,6 +61,8 @@ export interface ObjectiveProgress {
   awayMin?: number
   /** Declared Swap: counts as kept. */
   swapped?: boolean
+  /** Timestamp of the first interaction (start-delay measurement). */
+  firstTs?: number
 }
 
 export type ProgressMap = Partial<Record<string, ObjectiveProgress>>

@@ -171,6 +171,7 @@ export function GuildReport() {
       >
         Copy for Claude
       </Btn>
+      <Btn variant="ghost" onClick={() => useUI.getState().open({ name: 'audit' })}>Thought Audit (weekly)</Btn>
       <Btn onClick={() => void act(async () => { await downloadBackup(snap.today); await markBackup(repo) }).then(() => setMsg('Backup downloaded.'))}>Download backup (JSON)</Btn>
       {msg && <p className="text-sm text-cyan" role="status">{msg}</p>}
       <p className="sys-dim text-xs">The weakest stat becomes next week's Focus Stat: its objectives earn ×1.5 XP.</p>

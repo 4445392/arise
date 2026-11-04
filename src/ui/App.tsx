@@ -11,6 +11,7 @@ import { CheckIn, Drift, Pulse } from './screens/Quick'
 import { Bosses, FearLog, Reentry, Shutdown } from './screens/Flow'
 import { Journal, Laws, Mirror, More, Settings, Skills } from './screens/Menus'
 import { GuildReport, QuestLog, ShadowArmy } from './screens/Systems'
+import { Assessments, Becoming, Decisions, FeedbackSheet, IpipTest, Manual, ThoughtAuditScreen, ValuesSort } from './screens/MirrorScreens'
 import { Btn } from './kit'
 
 const TABS: { id: Tab; label: string; glyph: string }[] = [
@@ -51,6 +52,20 @@ function renderSub(s: Sub) {
       return <GuildReport />
     case 'questlog':
       return <QuestLog />
+    case 'manual':
+      return <Manual />
+    case 'audit':
+      return <ThoughtAuditScreen />
+    case 'assess':
+      return <Assessments />
+    case 'ipip':
+      return <IpipTest />
+    case 'values':
+      return <ValuesSort />
+    case 'becoming':
+      return <Becoming />
+    case 'decisions':
+      return <Decisions />
   }
 }
 
@@ -151,7 +166,14 @@ export default function App() {
           </nav>
         </>
       )}
+      <FeedbackGate />
       <Notice />
     </div>
   )
+}
+
+/** The feedback sheet waits until no [NOTICE] is on screen. */
+function FeedbackGate() {
+  const waiting = useUI((s) => s.notices.length > 0)
+  return waiting ? null : <FeedbackSheet />
 }

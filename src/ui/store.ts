@@ -3,6 +3,8 @@ import { configureAudio, LINES, sfx } from '../audio'
 import { STAT_KEYS, type StatKey } from '../engine/types'
 import { MODE_NOTICES } from '../engine/mode'
 import { repo, requestPersist, type Snapshot } from '../data'
+import { isObjectiveDone } from '../engine/xp'
+import { shouldAskMotive } from '../engine/manual'
 
 export type Tab = 'status' | 'quest' | 'mirror' | 'skills' | 'more'
 
@@ -21,6 +23,13 @@ export type Sub =
   | { name: 'shadows' }
   | { name: 'guild' }
   | { name: 'questlog' }
+  | { name: 'manual' }
+  | { name: 'audit' }
+  | { name: 'assess' }
+  | { name: 'ipip' }
+  | { name: 'values' }
+  | { name: 'becoming' }
+  | { name: 'decisions' }
 
 export type NoticeKind = 'system' | 'penalty' | 'recovery' | 'levelup' | 'support'
 
@@ -33,7 +42,15 @@ export interface NoticeItem {
   cta?: string
 }
 
+export interface FeedbackReq {
+  key: string
+  title: string
+  ask: boolean
+}
+
 interface UI {
+  feedback: FeedbackReq | null
+  clearFeedback: () => void
   snap: Snapshot | null
   ready: boolean
   error: string | null
@@ -73,6 +90,8 @@ function lsSet(k: string, v: string) {
 }
 
 export const useUI = create<UI>((set, get) => ({
+  feedback: null,
+  clearFeedback: () => set({ feedback: null }),
   snap: null,
   ready: false,
   error: null,
@@ -112,7 +131,11 @@ export const useUI = create<UI>((set, get) => ({
     const result = await fn()
     await get().refresh()
     const after = get().snap
-    if (before && after) react(before, after, get().notify)
+    if (before && after) {
+      react(before, after, get().notify)
+      const fb = newlyDone(before, after)
+      if (fb) set({ feedback: fb })
+    }
     return result
   },
 
@@ -140,6 +163,18 @@ export const useUI = create<UI>((set, get) => ({
   notify: (n) => set((s) => ({ notices: [...s.notices, { ...n, id: `${Date.now()}-${Math.random()}` }] })),
   dismissNotice: () => set((s) => ({ notices: s.notices.slice(1) })),
 }))
+
+/** First objective that flipped to done between two snapshots (same day): ask for difficulty / enjoyment. */
+function newlyDone(before: Snapshot, after: Snapshot): FeedbackReq | null {
+  if (before.today !== after.today) return null
+  const all = [...after.log.quest.objectives, ...(after.log.quest.penalty ? [after.log.quest.penalty] : [])]
+  for (const o of all) {
+    if (isObjectiveDone(o, after.log.progress[o.key]) && !isObjectiveDone(o, before.log.progress[o.key]) && !after.log.progress[o.key]?.swapped) {
+      return { key: o.key, title: o.title, ask: shouldAskMotive(o.key, after.today) }
+    }
+  }
+  return null
+}
 
 /** Sounds + notices for what changed between two snapshots. */
 function react(before: Snapshot, after: Snapshot, notify: UI['notify']) {

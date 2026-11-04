@@ -1,4 +1,4 @@
-import { addDays, diffDays, weekday } from '../engine/day'
+import { addDays, weekday } from '../engine/day'
 import { disasterLine } from '../engine/fear'
 import { hiddenForDay, weekKey } from '../engine/hidden'
 import { buildIcs } from '../engine/ics'
@@ -137,4 +137,46 @@ export async function icsText(repo: Repo): Promise<string> {
   })
 }
 
-export { diffDays }
+
+// ================================================================ Phase 6: the Mirror
+import { clockTs, wakeTimeFor } from '../engine/day'
+import type { Assessment, Decision, ThoughtAudit } from './models'
+
+/** Two taps after an objective (difficulty, enjoyment) + optional motive tag. Start delay is measured automatically. */
+export async function addFeedback(repo: Repo, objectiveKey: string, difficulty: number, enjoyment: number, motive?: string): Promise<void> {
+  const day = repo.today()
+  const [log, s] = await Promise.all([repo.db.dayLogs.get(day), repo.getSettings()])
+  const first = log?.progress[objectiveKey]?.firstTs
+  const wake = clockTs(day, wakeTimeFor(day, s.wakeWeekday, s.wakeWeekend))
+  const delay = first ? Math.max(0, Math.round((first - wake) / 60_000)) : undefined
+  const ts = repo.now()
+  await repo.db.feedback.add({ ts, dayKey: day, objectiveKey, difficulty, enjoyment, startDelayMin: delay !== undefined && delay < 16 * 60 ? delay : undefined })
+  if (motive) await repo.db.motiveTags.add({ ts, dayKey: day, objectiveKey, motive })
+}
+
+export async function addThoughtAudit(repo: Repo, traps: Record<string, number>): Promise<void> {
+  const wk = weekKey(repo.today())
+  const existing = await repo.db.thoughtAudits.where('weekKey').equals(wk).first()
+  if (existing?.id) await repo.db.thoughtAudits.update(existing.id, { traps, ts: repo.now() })
+  else {
+    await repo.db.thoughtAudits.add({ ts: repo.now(), weekKey: wk, traps })
+    await repo.db.events.add({ ts: repo.now(), dayKey: repo.today(), source: `audit:${wk}`, label: 'Thought Audit', xp: 20, statXp: { WIS: 6 } })
+  }
+}
+export const listAudits = (repo: Repo): Promise<ThoughtAudit[]> => repo.db.thoughtAudits.orderBy('weekKey').toArray()
+
+export async function saveAssessment(repo: Repo, kind: Assessment['kind'], result: unknown): Promise<void> {
+  await repo.db.assessments.add({ ts: repo.now(), kind, result })
+  if (kind === 'becoming') await repo.savePlayer({ becoming: result as string[] })
+  await repo.db.events.add({ ts: repo.now(), dayKey: repo.today(), source: `assess:${kind}:${repo.now()}`, label: `Assessment: ${kind}`, xp: kind === 'ipip' ? 120 : 60, statXp: { WIS: kind === 'ipip' ? 12 : 6 } })
+}
+export const latestAssessment = async (repo: Repo, kind: Assessment['kind']) => (await repo.db.assessments.where('kind').equals(kind).sortBy('ts')).at(-1)
+
+export async function addDecision(repo: Repo, d: Omit<Decision, 'id' | 'ts' | 'outcome' | 'lesson'>): Promise<void> {
+  await repo.db.decisions.add({ ...d, ts: repo.now() })
+}
+export const listDecisions = (repo: Repo): Promise<Decision[]> => repo.db.decisions.orderBy('reviewDay').toArray()
+export async function reviewDecision(repo: Repo, id: number, outcome: string, lesson: string): Promise<void> {
+  await repo.db.decisions.update(id, { outcome, lesson })
+  await repo.db.events.add({ ts: repo.now(), dayKey: repo.today(), source: `decision:${id}`, label: 'Decision reviewed', xp: 30, statXp: { WIS: 6, SEN: 4 } })
+}

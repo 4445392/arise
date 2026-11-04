@@ -343,7 +343,7 @@ export class Repo {
     const spec = [...log.quest.objectives, ...(log.quest.penalty ? [log.quest.penalty] : [])].find((o) => o.key === key)
     if (!spec) throw new Error(`Unknown objective ${key}`)
     const before = log.progress[key] ?? { items: [], value: 0 }
-    const after = fn({ ...before, items: [...before.items] })
+    const after = { ...fn({ ...before, items: [...before.items] }), firstTs: before.firstTs ?? this.now() }
     const wasDone = isObjectiveDone(spec, before)
     const nowDone = isObjectiveDone(spec, after)
     const settings = await this.getSettings()
@@ -507,7 +507,7 @@ export class Repo {
 
   /** Map stored rows to the shapes the pure insights engine reads. */
   async insightInput(): Promise<InsightInput> {
-    const [pulses, drifts, sessions, logs, fears, level, screen] = await Promise.all([
+    const [pulses, drifts, sessions, logs, fears, level, screen, feedback, motives, audits, assess] = await Promise.all([
       this.db.pulses.toArray(),
       this.db.drifts.toArray(),
       this.db.sessions.toArray(),
@@ -515,15 +515,19 @@ export class Repo {
       this.db.fears.toArray(),
       this.totals().then((t) => t.level.level),
       this.db.screenTime.toArray(),
+      this.db.feedback.toArray(),
+      this.db.motiveTags.toArray(),
+      this.db.thoughtAudits.toArray(),
+      this.db.assessments.orderBy('ts').toArray(),
     ])
     const deep = new Map<string, number>()
     for (const s of sessions) deep.set(s.dayKey, (deep.get(s.dayKey) ?? 0) + s.minutes)
     const screenBy = new Map(screen.map((s) => [s.dayKey, s.minutes]))
     return {
       pulses: pulses.map((p) => ({ ts: p.ts, dayKey: p.dayKey, energy: p.energy, focus: p.focus ?? 0, mood: p.mood, activity: p.activity, urge: p.urge })),
-      ratings: [],
+      ratings: feedback.map((f) => ({ objective: f.objectiveKey.split(':')[0], difficulty: f.difficulty, enjoyment: f.enjoyment, startDelayMin: f.startDelayMin ?? null })),
       drifts: drifts.map((d) => ({ ts: d.ts, cause: d.cause })),
-      motives: [],
+      motives: motives.map((m) => ({ motive: m.motive })),
       sessions: sessions.map((s) => ({ startTs: s.ts - s.minutes * 60_000, minutes: s.minutes, quality: s.quality })),
       days: logs.map((l) => ({
         dayKey: l.dayKey,
@@ -533,9 +537,9 @@ export class Repo {
         screenMin: screenBy.get(l.dayKey) ?? l.screenMin ?? null,
       })),
       fears: fears.map((f) => ({ id: f.id ?? 0, predicted: f.predicted, severity: f.severity, outcome: f.outcome })),
-      audits: [],
-      ipip: null,
-      values: null,
+      audits: audits.map((a) => ({ traps: a.traps })),
+      ipip: (assess.filter((a) => a.kind === 'ipip').at(-1)?.result as InsightInput['ipip']) ?? null,
+      values: (assess.filter((a) => a.kind === 'values').at(-1)?.result as string[] | undefined) ?? null,
       skills: [],
       level,
     }

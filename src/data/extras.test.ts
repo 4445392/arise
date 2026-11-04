@@ -58,3 +58,34 @@ describe('guild report and backup', () => {
     expect(await icsText(repo)).toContain('BEGIN:VCALENDAR')
   })
 })
+
+import { addDecision, addFeedback, addThoughtAudit, listDecisions, reviewDecision, saveAssessment } from './extras'
+
+describe('phase 6: the Mirror data', () => {
+  it('feedback + motive tags feed the insight input', async () => {
+    await repo.toggleItem(repo.today(), 'AWAKEN', 'up')
+    await addFeedback(repo, 'AWAKEN', 2, 5, 'mastery')
+    const inp = await repo.insightInput()
+    expect(inp.ratings).toEqual([{ objective: 'AWAKEN', difficulty: 2, enjoyment: 5, startDelayMin: expect.any(Number) }])
+    expect(inp.motives).toEqual([{ motive: 'mastery' }])
+  })
+  it('thought audit is one per week and awards XP once', async () => {
+    await addThoughtAudit(repo, { 'mind-reading': 3 })
+    await addThoughtAudit(repo, { 'mind-reading': 1 })
+    expect(await repo.db.thoughtAudits.count()).toBe(1)
+    expect((await repo.totals()).xp).toBe(20)
+  })
+  it('assessments unlock Personality / Values and DECODED rises', async () => {
+    await saveAssessment(repo, 'ipip', { E: 2, A: 4, C: 3, N: 3, O: 4 })
+    await saveAssessment(repo, 'values', ['Growth', 'Honesty', 'Health', 'Family', 'Mastery'])
+    await saveAssessment(repo, 'becoming', ['a', 'b', 'c'])
+    expect((await repo.getPlayer()).becoming).toEqual(['a', 'b', 'c'])
+    expect(await repo.decoded()).toBe(Math.round((2 / 13) * 100))
+  })
+  it('decision journal: log then review', async () => {
+    await addDecision(repo, { decision: 'Take the gig', expected: 'R2,000', why: 'cash', confidence: 70, reviewDay: '2026-12-08' })
+    const [d] = await listDecisions(repo)
+    await reviewDecision(repo, d.id!, 'R1,500', 'quote higher')
+    expect((await listDecisions(repo))[0].lesson).toBe('quote higher')
+  })
+})

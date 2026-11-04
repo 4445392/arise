@@ -52,10 +52,10 @@ export function Mirror() {
       <Row title="Night Journal" hint="Your past entries" onClick={() => open({ name: 'journal' })} />
       <Row title="Fear Log" hint="Murphy's Law Debugger" onClick={() => open({ name: 'fear' })} />
       <Row title="Boss Raids" hint="Exams" onClick={() => open({ name: 'bosses' })} />
-      {manual.locked ? <LockedCard title="PLAYER MANUAL" label={manual.label} hint={`Reach Lv.5 (you are Lv.${lv}). Chapters unlock from real data, with sample sizes.`} /> : <LockedCard title="PLAYER MANUAL" label="CHAPTERS LOCKED" hint="Needs more Pulses and sessions. The full Manual arrives with the Mirror update." />}
-      <LockedCard title="EASY / HARD MAP" label="NEEDS 30 RATINGS" hint="Arrives with objective feedback." />
-      <LockedCard title="THOUGHT AUDIT" label="WEEKLY · SUNDAY" hint="Arrives with the Guild Report." />
-      {decision.locked && <LockedCard title="DECISION JOURNAL" label={decision.label} />}
+      <Row title="Player Manual" hint={manual.locked ? `Full Manual at Lv.5 (you are Lv.${lv}) · chapters, Easy/Hard map` : 'How you work · chapters · Easy/Hard map'} onClick={() => open({ name: 'manual' })} />
+      <Row title="Thought Audit" hint="Weekly · thinking traps" onClick={() => open({ name: 'audit' })} />
+      <Row title="Assessments" hint="Big Five · values · who I'm becoming" onClick={() => open({ name: 'assess' })} />
+      {decision.locked ? <LockedCard title="DECISION JOURNAL" label={decision.label} /> : <Row title="Decision Journal" onClick={() => open({ name: 'decisions' })} />}
     </div>
   )
 }
