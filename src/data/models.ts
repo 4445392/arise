@@ -127,6 +127,8 @@ export interface JournalEntry {
   kept: string
   fear: string
   lesson: string
+  /** EXAM mode: tomorrow's first study block, named at Shutdown. */
+  nextBlock?: string
 }
 
 export interface FearEntry {

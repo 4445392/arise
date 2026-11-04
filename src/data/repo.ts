@@ -8,6 +8,7 @@ import {
   isRecoveryDay,
 } from '../engine/penalties'
 import { addStats, dayStatXp, emptyStats, statLevel } from '../engine/stats'
+import { computeInsights, decodedPct, type InsightInput } from '../engine/insights'
 import { nextRampWeek, rampDecision, trustPct, type PromiseDay } from '../engine/trust'
 import {
   fatigueStep,
@@ -61,9 +62,15 @@ export interface Totals {
   trust30: number | null
   streak: number
   promisesKept: number
+  /** Last game day each stat was trained (for the visual RUST tag). */
+  lastTrained: Record<StatKey, string | null>
 }
 
 export interface Snapshot {
+  /** DECODED %: unlocked Mirror chapters / total. */
+  decoded: number
+  /** Pulse slots already logged today (1 = morning check-in). */
+  pulseSlots: number[]
   settings: Settings
   player: Player
   today: string
@@ -404,6 +411,7 @@ export class Repo {
     else await this.db.journal.add({ ...j, ts: this.now(), dayKey: day })
     const ok = [j.kept, j.fear, j.lesson].every((l) => l.trim().length > 0)
     await this.setItem(day, 'SHUTDOWN', 'journal', ok)
+    if (j.nextBlock !== undefined) await this.setItem(day, 'SHUTDOWN', 'next', j.nextBlock.trim().length > 0)
   }
 
   journalFor(day: string): Promise<JournalEntry | undefined> {
@@ -482,6 +490,8 @@ export class Repo {
     const today = this.today()
     const promises = toPromises(logs)
     const ordered = [...logs].sort((a, b) => a.dayKey.localeCompare(b.dayKey))
+    const lastTrained = Object.fromEntries(STAT_KEYS.map((k) => [k, null])) as Record<StatKey, string | null>
+    for (const l of ordered) for (const k of STAT_KEYS) if (l.statXp[k] > 0) lastTrained[k] = l.dayKey
     return {
       xp: Math.round(xp),
       level: resolveLevel(xp, player.passedRanks),
@@ -491,7 +501,48 @@ export class Repo {
       trust30: trustPct(promises, today, 30),
       streak: streakFrom(ordered.map((l) => l.outcome)),
       promisesKept: logs.reduce((s, l) => s + l.kept, 0),
+      lastTrained,
     }
+  }
+
+  /** Map stored rows to the shapes the pure insights engine reads. */
+  async insightInput(): Promise<InsightInput> {
+    const [pulses, drifts, sessions, logs, fears, level, screen] = await Promise.all([
+      this.db.pulses.toArray(),
+      this.db.drifts.toArray(),
+      this.db.sessions.toArray(),
+      this.db.dayLogs.toArray(),
+      this.db.fears.toArray(),
+      this.totals().then((t) => t.level.level),
+      this.db.screenTime.toArray(),
+    ])
+    const deep = new Map<string, number>()
+    for (const s of sessions) deep.set(s.dayKey, (deep.get(s.dayKey) ?? 0) + s.minutes)
+    const screenBy = new Map(screen.map((s) => [s.dayKey, s.minutes]))
+    return {
+      pulses: pulses.map((p) => ({ ts: p.ts, dayKey: p.dayKey, energy: p.energy, focus: p.focus ?? 0, mood: p.mood, activity: p.activity, urge: p.urge })),
+      ratings: [],
+      drifts: drifts.map((d) => ({ ts: d.ts, cause: d.cause })),
+      motives: [],
+      sessions: sessions.map((s) => ({ startTs: s.ts - s.minutes * 60_000, minutes: s.minutes, quality: s.quality })),
+      days: logs.map((l) => ({
+        dayKey: l.dayKey,
+        sleepHours: l.checkIn?.sleepHours ?? null,
+        completionPct: l.pct,
+        deepWorkMin: deep.get(l.dayKey) ?? 0,
+        screenMin: screenBy.get(l.dayKey) ?? l.screenMin ?? null,
+      })),
+      fears: fears.map((f) => ({ id: f.id ?? 0, predicted: f.predicted, severity: f.severity, outcome: f.outcome })),
+      audits: [],
+      ipip: null,
+      values: null,
+      skills: [],
+      level,
+    }
+  }
+
+  async decoded(): Promise<number> {
+    return decodedPct(computeInsights(await this.insightInput()))
   }
 
   async snapshot(): Promise<Snapshot> {
@@ -499,15 +550,19 @@ export class Repo {
     await this.rollover()
     const today = this.today()
     const log = await this.ensureDay(today)
-    const [settings, player, totals, exams, fears] = await Promise.all([
+    const [settings, player, totals, exams, fears, decoded] = await Promise.all([
       this.getSettings(),
       this.getPlayer(),
       this.totals(),
       this.listExams(),
       this.db.fears.toArray(),
+      this.decoded(),
     ])
     const minuteOfDay = minuteOfClock(this.now())
+    const pulseSlots = (await this.pulsesFor(today)).map((p) => p.slot)
     return {
+      decoded,
+      pulseSlots,
       settings,
       player,
       today,

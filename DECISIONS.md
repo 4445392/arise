@@ -23,3 +23,21 @@ One line each: decision — reason.
 - HP = (sleep/8)^1.5 × 70 + quality × 30; MP = energy × 60 + mood × 40; fatigue +1 per full-load day at HP < 60, deload at 3; low-mood load cut lasts while the 5-of-7 condition holds plus 2 days.
 - Insight windows trim hours with no data and tie-break by sample size; every chapter shows its sample size and correlation chapters say "correlation, not proof".
 - Daily XP is derived (recomputed from progress), not accumulated, so re-ticking an objective can never double-award.
+
+## Phase 2 (data)
+- All 25 entity tables are in Dexie schema v1 up front — later phases need no migration. Teach-back audio blobs (`recordings`) are device-local and excluded from JSON backups.
+- One-off awards (Boss Raid show-up/result, re-entry bonus, urge resisted) live in an `events` ledger; everything else is derived from DayLogs. Total XP = Σ DayLog.xp + Σ events.
+- The +25 % COMPLETE bonus needs every objective finished by lights-out; late logging still counts as kept (streak, TRUST) but forfeits the bonus (spec 3, "on-time bonus").
+- Days nobody opened are closed as FAILED at rollover (penalty / recovery rules apply) — the System shrinks, it never breaks.
+- "Urge resisted" gives +3 WIL stat-XP (spec says "+1 WIL"; a whole stat point costs 40+, so I read it as a small bump). Re-entry within 30 min gives +5 XP and +4 WIL stat-XP.
+- Boss Raid XP: 150 for showing up, +75 when the result is logged (spec gave no numbers).
+- Import validates app/schema/tables before touching anything and replaces data atomically in one transaction.
+
+## Phase 3 (core UI)
+- Navigation is a tab bar plus a sub-screen stack wired to browser history, so the phone's back gesture works.
+- The Dungeon timer uses wall-clock timestamps and persists to localStorage, so it survives screen-off and app switches.
+- Day-start announcements (mode change, quest arrival chime + voice, penalty alarm, recovery notice) fire once per game day.
+- Support card (spec 11 rule 7) lists UWC student support / counselling and NO helpline number — none verified yet; a verified number can be added in a later update.
+- Penalty "Dragon" is generic until the Mirror's Easy/Hard map exists (Phase 6).
+- Shop / Titles / History / Player Manual show LOCKED or COMING teasers; they are built in later phases.
+- Rank Exams are Phase 7: if XP passes the Lv9 gate before then, the level is held and a RANK EXAM AVAILABLE notice shows while XP keeps banking.
