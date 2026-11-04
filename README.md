@@ -25,13 +25,15 @@ Icons are generated from `public/icon.svg`: `node scripts/make-icons.mjs`.
 
 Pushing to `main` runs `.github/workflows/deploy.yml`, which tests, builds and publishes to Pages.
 
-One-time setup:
+One-time setup (PowerShell, from the project folder):
 
-```bash
-gh auth login
-gh repo create arise --public --source . --push
-gh api -X POST repos/4445392/arise/pages -f build_type=workflow   # or: repo Settings -> Pages -> Source: GitHub Actions
+```powershell
+winget install GitHub.cli        # once; reopen the terminal afterwards
+gh auth login                    # GitHub.com -> HTTPS -> login with browser
+./scripts/publish.ps1            # tests, builds, creates the repo, pushes, enables Pages
 ```
+
+(No `gh`? Create an empty public repo named `arise` on github.com, then `git remote add origin https://github.com/4445392/arise.git`, `git push -u origin main`, and set Settings -> Pages -> Source: **GitHub Actions**.)
 
 The app lives at `https://4445392.github.io/arise/`.
 
