@@ -5,6 +5,7 @@ import { repo } from '../../data'
 import { Btn, CheckRow, Counter, LockedCard, SystemWindow, fmtHMS, useNow } from '../kit'
 import { startObjective } from '../actions'
 import { useUI } from '../store'
+import { HiddenQuests } from './Systems'
 
 const AUTO_ITEMS = new Set(['pulses', 'journal', 'next'])
 
@@ -124,6 +125,7 @@ export default function Quest() {
       {q.objectives.map((o) => (
         <ObjectiveCard key={o.key} o={o} />
       ))}
+      <HiddenQuests />
       {q.locked.map((l) => (
         <LockedCard key={l.id} title={l.title} label={l.reason} />
       ))}

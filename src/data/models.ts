@@ -21,6 +21,8 @@ export interface Settings {
   /** Main Quest window text, moved by the Mirror once it finds the real peak. */
   mainQuestWindow: string
   onboarded: boolean
+  /** Last day a JSON backup was exported (drives the Sunday reminder). */
+  lastBackupDay?: string
 }
 
 export interface Player {

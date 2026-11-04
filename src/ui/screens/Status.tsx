@@ -6,6 +6,7 @@ import { TRUST_COPY } from '../../engine/trust'
 import { Bar, Btn, SystemWindow } from '../kit'
 import { startObjective, daysUntil, STAT_FULL } from '../actions'
 import { useUI } from '../store'
+import { BackupBanner } from './Systems'
 
 const MODE_LABEL = { EXAM: 'EXAM MODE', BREAK: 'TRAINING ARC', SEMESTER: 'SEMESTER' } as const
 
@@ -131,6 +132,8 @@ export default function Status() {
           Pulse #2 is due · 10 s
         </Btn>
       )}
+
+      <BackupBanner />
 
       {snap.checkBacksDue.length > 0 && (
         <SystemWindow title="CHECK-BACK DUE">

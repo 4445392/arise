@@ -267,7 +267,13 @@ export function FearLog({ examId, compose }: { examId?: number; compose?: boolea
         </ul>
       </SystemWindow>
 
-      {lock.locked ? <LockedCard title="SHADOW ARMY" label={lock.label} hint="Every fear you beat becomes a Shadow." /> : <LockedCard title="SHADOW ARMY" label="OPENS NEXT UPDATE" hint="Resolved fears will become Shadows you can ARISE." />}
+      {lock.locked ? (
+        <LockedCard title="SHADOW ARMY" label={lock.label} hint="Every fear you beat becomes a Shadow." />
+      ) : (
+        <Btn variant="primary" onClick={() => useUI.getState().open({ name: 'shadows' })}>
+          Shadow Army · ARISE resolved fears
+        </Btn>
+      )}
     </Screen>
   )
 }

@@ -10,6 +10,7 @@ import Timer from './screens/Timer'
 import { CheckIn, Drift, Pulse } from './screens/Quick'
 import { Bosses, FearLog, Reentry, Shutdown } from './screens/Flow'
 import { Journal, Laws, Mirror, More, Settings, Skills } from './screens/Menus'
+import { GuildReport, QuestLog, ShadowArmy } from './screens/Systems'
 import { Btn } from './kit'
 
 const TABS: { id: Tab; label: string; glyph: string }[] = [
@@ -44,6 +45,12 @@ function renderSub(s: Sub) {
       return <Settings />
     case 'journal':
       return <Journal />
+    case 'shadows':
+      return <ShadowArmy />
+    case 'guild':
+      return <GuildReport />
+    case 'questlog':
+      return <QuestLog />
   }
 }
 

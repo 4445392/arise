@@ -5,6 +5,7 @@ import { useUI } from './store'
 export function startObjective(o: ObjectiveSpec) {
   const ui = useUI.getState()
   if (o.id === 'RITUAL') return ui.open({ name: 'fear', examId: Number(o.ref), compose: true })
+  if (o.id === 'GUILD_REPORT') return ui.open({ name: 'guild' })
   if (o.id === 'SHUTDOWN') return ui.open({ name: 'shutdown' })
   if (o.kind === 'timer') return ui.open({ name: 'timer', key: o.key })
   // checklist objectives live in the Quest window

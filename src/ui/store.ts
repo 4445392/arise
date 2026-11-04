@@ -18,6 +18,9 @@ export type Sub =
   | { name: 'laws' }
   | { name: 'settings' }
   | { name: 'journal' }
+  | { name: 'shadows' }
+  | { name: 'guild' }
+  | { name: 'questlog' }
 
 export type NoticeKind = 'system' | 'penalty' | 'recovery' | 'levelup' | 'support'
 

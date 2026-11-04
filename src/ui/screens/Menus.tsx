@@ -8,6 +8,8 @@ import type { JournalEntry } from '../../data/models'
 import { LINES, sfx } from '../../audio'
 import { Btn, CheckRow, Chip, Field, LockedCard, Screen, SystemWindow } from '../kit'
 import { useUI } from '../store'
+import { downloadBackup, saveBlob } from '../download'
+import { icsText, markBackup } from '../../data/extras'
 
 function useLock(feature: Feature) {
   const snap = useUI((s) => s.snap)!
@@ -85,7 +87,10 @@ export function More() {
     <div className="flex flex-col gap-3">
       <h1 className="sys-title !text-lg">[MORE]</h1>
       <Row title="Boss Raids" hint="Exams, rituals, results" onClick={() => open({ name: 'bosses' })} />
+      <Row title="Quest Log" hint="Daily · penalty · hidden · raids" onClick={() => open({ name: 'questlog' })} />
+      <Row title="Guild Report" hint="Weekly review · Copy for Claude · backup" onClick={() => open({ name: 'guild' })} />
       <Row title="Fear Log" onClick={() => open({ name: 'fear' })} />
+      <Row title="Shadow Army" hint="Fears you have beaten" onClick={() => open({ name: 'shadows' })} />
       <Row title="Night Journal" onClick={() => open({ name: 'journal' })} />
       <Row title="Laws of the System" onClick={() => open({ name: 'laws' })} />
       <Row title="Settings & backup" hint="Times · export / import · reset" onClick={() => open({ name: 'settings' })} />
@@ -168,16 +173,14 @@ export function Settings() {
   const sleepOk = sleepWindowMinutes(s.lightsOut, s.wakeWeekday) >= 420 && sleepWindowMinutes(s.lightsOut, s.wakeWeekend) >= 420
 
   async function doExport() {
-    const file = await repo.exportAll()
-    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `arise-backup-${snap.today}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(a.href), 10_000)
-    setMsg(`Backup downloaded (${Object.values(file.data).reduce((n, r) => n + (r?.length ?? 0), 0)} records). Keep it somewhere safe.`)
+    const n = await downloadBackup(snap.today)
+    await markBackup(repo)
+    setMsg(`Backup downloaded (${n} records). Keep it somewhere safe.`)
+  }
+
+  async function doIcs() {
+    saveBlob('arise-schedule.ics', new Blob([await icsText(repo)], { type: 'text/calendar' }))
+    setMsg('Downloaded arise-schedule.ics. Open it to add the wake alarm, focus window, Shutdown and Sunday report to your calendar. If your calendar drops the alarms, turn on default reminders for that calendar.')
   }
 
   async function onFile(f: File | undefined) {
@@ -238,6 +241,13 @@ export function Settings() {
             Test sound + voice
           </Btn>
         </div>
+      </SystemWindow>
+
+      <SystemWindow title="CALENDAR">
+        <p className="sys-dim text-sm">Web apps can't schedule reliable alarms. Your phone's calendar can.</p>
+        <Btn className="mt-3 w-full" onClick={() => void doIcs()}>
+          Add schedule to my calendar (.ics)
+        </Btn>
       </SystemWindow>
 
       <SystemWindow title="BACKUP">

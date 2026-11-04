@@ -41,3 +41,10 @@ One line each: decision — reason.
 - Penalty "Dragon" is generic until the Mirror's Easy/Hard map exists (Phase 6).
 - Shop / Titles / History / Player Manual show LOCKED or COMING teasers; they are built in later phases.
 - Rank Exams are Phase 7: if XP passes the Lv9 gate before then, the level is held and a RANK EXAM AVAILABLE notice shows while XP keeps banking.
+
+## Phase 5 (systems)
+- Shadow = a RESOLVED fear (check-back done); ARISE pays 40 XP + 4 per severity point and NRV stat-XP. Shadow rank follows severity (1-2 E ... 10 S).
+- Hidden Quests: 14 in the pool, 1-2 per week on random Mon-Sat days (seeded per week), open until Sunday, 40-80 XP, optional. VIA survey item points to the official VIA Institute site, no link hard-coded.
+- Guild Report: week = Monday-Sunday; Weekly Focus Stat (weakest stat, ties by stat order) is applied when the report is opened on Sunday.
+- Backup reminder shows on Sundays or 7+ days since the last export. .ics has wake (weekday/weekend), focus window, Shutdown (30 min before lights-out), Sunday report, all with alarms.
+
